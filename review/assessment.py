@@ -1,7 +1,10 @@
 from receipt.selection import select_pieces
 from reports.publication import publish_report
 from review.ports import resolve_ports
+from review.reuse import review_reuse
 from review.trace import trace_handover
+
+__all__ = ['review', 'review_reuse']
 
 
 def review(inventory, reports, survey, revision_id, receipt_ids, start):

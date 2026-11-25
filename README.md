@@ -7,11 +7,11 @@
 使用 Python 3.11 标准库和 SQLite。从项目根目录执行下列命令。
 
 ```text
-python3 -B check_project.py
+python3 -B verify.py
 python3 -B demo.py
 ```
 
-`check_project.py` 由运行环境提供，加载 `tests` 包的完整回归。演示在临时目录通过正式接口冻结、发行、补发、实收。它在关闭源站连接后移走源目录，核对隔离报告并重开中心存储复领。
+`check_project.py` 由运行环境提供，加载 `tests` 包的完整回归。`verify.py` 在同一入口内运行原回归与 `reuse_cases.py` 的复用核验，任一业务断言失败即以非零退出。演示在临时目录通过正式接口冻结、发行、补发、实收，并在停源后用旧幅加复用声明签报目标修订。它在关闭源站连接后移走源目录，核对隔离报告并重开中心存储复领。
 
 ## 登记和计算
 
@@ -42,7 +42,9 @@ python3 -B demo.py
 | `issue.catalog.issue(revisions, catalog, revision_id, piece)` | 返回 `IssuedPiece`，含 `issue_id` 和 `raw` 原字节，同版同幅重复发行复用固定件 |
 | `issue.catalog.issue(None, catalog, issue_id=original_id)` | 按发行号返回完整原件 |
 | `receipt.intake.receive(inventory, raw)` | 校验 V1 幅件并以原字节实收，返回整数实收号 |
+| `issue.catalog.compatibility_for(revisions, catalog, old_issue_id, target_revision)` | 发行站判定已固定旧幅对另一冻结修订是否可复用，返回复用声明字节 |
 | `review.assessment.review(inventory, reports, survey, revision_id, receipt_ids, start)` | 只用点名来件核定并签存，返回 `ReportBundle` |
+| `review.assessment.review_reuse(inventory, reports, survey, target_revision, receipt_ids, declarations, start)` | 停源后凭点名原件与复用声明，按目标修订接通并签存 |
 | `reports.history.read(reports, report_id)` | 按整数报告号读取此前提交的 `ReportBundle` |
 
 `ReportBundle` 含 `report_id`、报告 JSON 原字节 `report`、按幅排序的 `(幅名, 实收号)` 元组 `provenance` 和首执 JSON 原字节 `first_receipt`。报告保存调查、修订、起点和互斥结论。首执保存报告号、报告字节的 SHA-256 和逐幅实收号。新修订和新报告不会改写已签记录。
@@ -56,6 +58,12 @@ V1 外层是 UTF-8 JSON，`version` 为整数 1，`issue_id` 为发行号，`bod
 正文含 `survey`、`revision`、`piece`、`coverage`、`starts`、`incoming`、`routes` 和 `joins`。`starts` 从公开点名索引本幅路线。`incoming` 从入幅口索引 `from_piece` 与本幅 `route`。同一来幅进入同一格的接续共用一个口。幅内路线可指向排口、局部环或下一幅的入幅口。过缝路线的 `hops` 已含跨缝的那一步。`joins` 记录同幅、同出幅口的两条路线在幅内第一次同位的双侧偏移，格式为 `[较小路线号, 较大路线号, 左偏移, 右偏移]`。路线号与口号只在固定修订的交接中使用。原格网及私有格号留在源站。
 
 中心用所选来件核对同版和完整幅集，包含本次不经过的声明幅。随后解析起点和过缝接续，按实际访问顺序计算终局。正式报告的出处只记录本次选中的固定实收号。
+
+## 勘误后复用
+
+`issue.catalog.compatibility_for` 只能在源站在线时调用：它同时加载旧件所属修订和目标修订的冻结格网，按公开起点点名、按（来幅、目的幅、目的格）登记身份对应真实入幅口，逐路线核对排口号与跳数、入环跳数与环长、跨幅真实目的口与跳数，以及同出幅口路线的首次汇合是否存在和双侧偏移。等价时出具版本 2 的声明信封，外层含 `version`、`body`、`sha256`，沿用 V1 的传输完整性边界；正文绑定调查、幅名、旧发行号、旧件完整字节 SHA-256、旧修订与确切目标修订，并携带目标版口号下的 `starts`、`inlets`、`seams` 和原 `joins`，足以离线解释接缝。私有格号不进入声明。
+
+`review.assessment.review_reuse` 在停源后工作。每个目标幅恰用一件实收件：同版件无需声明，异版件须有恰好一份绑定该原件与本次目标的声明，所有传入声明都须用到。中心从原件取得本地路线和汇合依据，按声明的目标版口号接通跨幅路线，终局口径与同版复核一致。新入口的报告沿用 `revision` 记录目标修订，并新增 `sources`（幅名到实收号）和 `reuse_declarations`（复用幅名到所用声明完整字节 SHA-256）；首执保留 `report_sha256` 与 `sources` 并增加同样的声明摘要映射。同版选件可走原 `review`，也可走新入口并传入空声明列表，此时报告带空的 `reuse_declarations`。任何缺幅、歧义、错绑、损坏声明、接缝不通或提交失败均拒绝，且无新报告、出处或首执落账。
 
 ## 样例和回归
 

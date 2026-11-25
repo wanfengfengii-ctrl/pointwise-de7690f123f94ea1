@@ -1,10 +1,13 @@
 from dataclasses import dataclass
 from uuid import uuid4
 
+from issue.compatibility import compatibility_for
 from issue.coverage import derive_coverage
 from issue.envelope import encode_envelope
 from issue.evidence import derive_piece_body
 from storage import SQLiteFile
+
+__all__ = ['IssuedPiece', 'IssueCatalog', 'issue', 'compatibility_for']
 
 
 @dataclass(frozen=True)
