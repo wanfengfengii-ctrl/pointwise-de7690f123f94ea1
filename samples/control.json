@@ -1,0 +1,21 @@
+{
+  "survey": "Qingqu",
+  "pieces": ["A", "B"],
+  "cells": [
+    ["staff_s_loop", "A", true], ["staff_x_hidden", "A", true],
+    ["staff_p_loop", "B", true], ["staff_q_loop", "A", true],
+    ["staff_y_hidden", "A", true], ["staff_t_out", "A", true],
+    ["staff_approach", "A", true], ["staff_b_out", "B", true],
+    ["staff_return", "A", true], ["staff_outlet", "A", true],
+    ["staff_no_measurement", "B", false]
+  ],
+  "links": [
+    ["staff_s_loop", "staff_x_hidden"], ["staff_x_hidden", "staff_p_loop"],
+    ["staff_p_loop", "staff_q_loop"], ["staff_q_loop", "staff_y_hidden"],
+    ["staff_y_hidden", "staff_p_loop"],
+    ["staff_t_out", "staff_approach"], ["staff_approach", "staff_b_out"],
+    ["staff_b_out", "staff_return"], ["staff_return", "staff_outlet"]
+  ],
+  "starts": [["S", "staff_s_loop"], ["T", "staff_t_out"], ["AtO", "staff_outlet"]],
+  "outlets": [["O", "staff_outlet"]]
+}
